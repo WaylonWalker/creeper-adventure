@@ -35,8 +35,11 @@ class TreeSprite:
         self.flip = flip
         self.surf = surf
         self.leafs = [Leaf(self, self.surf, (x + 25, y + 25)) for i in range(2)]
+        self.shaking = 0
 
     def shake(self):
+        if self.shaking == 0:
+            self.shaking = 10
         self.leafs.extend(
             [
                 Leaf(
@@ -53,6 +56,13 @@ class TreeSprite:
         )
 
     @property
+    def rotate(self):
+        if self.shaking == 0:
+            return 0
+        self.shaking -= 1
+        return random.randint(-15, 15)
+
+    @property
     def rect(self):
         return pygame.Rect(
             self.x,
@@ -64,10 +74,13 @@ class TreeSprite:
     def draw(self):
         if self.health > 0:
             self.surf.blit(
-                pygame.transform.flip(
-                    pygame.transform.scale(self.image, (self.scale, self.scale)),
-                    self.flip,
-                    False,
+                pygame.transform.rotate(
+                    pygame.transform.flip(
+                        pygame.transform.scale(self.image, (self.scale, self.scale)),
+                        self.flip,
+                        False,
+                    ),
+                    self.rotate,
                 ),
                 (self.x, self.y),
             )
