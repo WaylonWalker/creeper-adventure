@@ -247,6 +247,7 @@ class Creeper(Game):
                     surf=self.background,
                 )
             )
+        self.joysticks = {}
 
     def attack(self):
 
@@ -317,6 +318,40 @@ class Creeper(Game):
                 self.hotbar.next(event.y)
             if event.type == pygame.MOUSEBUTTONDOWN:
                 self.attack()
+
+            if event.type == pygame.JOYDEVICEADDED:
+                # This event will be generated when the program starts for every
+                # joystick, filling up the list without needing to create them manually.
+                joy = pygame.joystick.Joystick(event.device_index)
+                self.joysticks[joy.get_instance_id()] = joy
+                print(f"Joystick {joy.get_instance_id()} connencted")
+            if event.type == pygame.JOYDEVICEREMOVED:
+                del self.joysticks[event.instance_id]
+                print(f"Joystick {event.instance_id} disconnected")
+
+        print(self.joysticks)
+        for joystick in self.joysticks.values():
+
+            if joystick.get_button(4) and self.hotbar_debounce:
+                self.hotbar.next(-1)
+                self.hotbar_debounce = 0
+
+            if joystick.get_button(5) and self.hotbar_debounce:
+                self.hotbar.next(1)
+                self.hotbar_debounce = 0
+
+            if not joystick.get_button(4) and not joystick.get_button(5):
+                self.hotbar_debounce = 1
+
+            hats = joystick.get_numhats()
+            print("numhats", hats)
+            for i in range(hats):
+                hat = joystick.get_hat(i)
+                if hat[0] == 1:
+                    self.x += 10
+                if hat[0] == -1:
+                    self.x -= 10
+
         self.mouse_box.draw()
 
 
