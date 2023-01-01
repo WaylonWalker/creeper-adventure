@@ -13,4 +13,4 @@ Creeper adventure is a game I am making with my son.
 ## Downloads
 
 * [windows](./creeper-windows-latest.zip)
-* [linux](./creeper-ubuntu-latest.zip)
+* [linux](./creeper-linux-latest.zip)
