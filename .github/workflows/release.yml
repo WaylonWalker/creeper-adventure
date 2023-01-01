@@ -41,11 +41,19 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: creeper-windows-latest
-          path: site/markout
+          path: creeper-windows-latest
+      - uses: vimtor/action-zip@v1
+        with:
+          files: creeper-windows-latest/
+          dest: site/markout/creeper-windows-latest.zip
       - uses: actions/download-artifact@v3
         with:
           name: creeper-ubuntu-latest
-          path: site/markout
+          path: creeper-linux-latest
+      - uses: vimtor/action-zip@v1
+        with:
+          files: creeper-linux-latest/
+          dest: site/markout/creeper-linux-latest.zip
       - name: GitHub Pages
         uses: crazy-max/ghaction-github-pages@v3.0.0
         with:
