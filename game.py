@@ -14,7 +14,7 @@ class Game:
         self.surfs = []
 
     def should_quit(self):
-        for event in pygame.event.get():
+        for event in self.events:
             if event.type == pygame.QUIT:
                 self.running = False
 
@@ -26,6 +26,7 @@ class Game:
 
     def run(self):
         while self.running:
+            self.events = pygame.event.get()
             self.should_quit()
             self.reset_screen()
             self.game()
