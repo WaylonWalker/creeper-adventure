@@ -34,11 +34,11 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: creeper-windows-latest
-          path: static
+          path: site/static
       - uses: actions/download-artifact@v3
         with:
           name: creeper-ubuntu-latest
-          path: static
+          path: site/static
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
