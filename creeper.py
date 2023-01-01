@@ -27,7 +27,6 @@ class MouseSprite:
 
 class TreeSprite:
     def __init__(self, tree, x, y, scale, flip, surf):
-        mouse_pos = [i - 2 for i in pygame.mouse.get_pos()]
         self.image = tree
         self.health = 100
         self.x = x
@@ -257,13 +256,11 @@ class Creeper(Game):
 
         self.screen.blit(
             creeper,
-            (self.x - creeper.get_size()[0] / 2, self.y - creeper.get_size()[1] / 2)
-            # pygame.transform.scale(next(self.creepers), (96, 128)), (self.x, self.y)
+            (self.x - creeper.get_size()[0] / 2, self.y - creeper.get_size()[1] / 2),
         )
         self.bee.draw(self.screen, self.x, self.y)
         for leaf in self.leafs:
             leaf.draw()
-        # self.screen.blit(self.foreground, (0, 0))
 
         light_level = pygame.time.get_ticks() % self.day_len
         light_level = abs(light_level * (255 * 2 / self.day_len) - 255)
@@ -285,7 +282,6 @@ class Creeper(Game):
         for hot_bar_item in self.hotbar.items:
             hot_bar_item.draw()
 
-        # self.ui.fill((0, 0, 0))
         y = self.screen.get_size()[1] - 24 - 4
         x = self.screen.get_size()[0] / 2 - (24 * 8 - 8) / 2
         self.screen.blit(
