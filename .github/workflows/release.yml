@@ -51,6 +51,6 @@ jobs:
         with:
           # you can choose the target branch of your choice
           target_branch: prod-markata
-          build_dir: markout
+          build_dir: site/markout
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
