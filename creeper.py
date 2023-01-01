@@ -108,7 +108,6 @@ class HotBarItem:
         self.surf = pygame.Surface((16, 16)).convert_alpha()
         self.pos = pos
         self.selected = False
-        # self.bee = pygame.image.load("assets/bee/idle/1.png")
         self.surf.fill((0, 0, 0))
 
     def draw(self):
@@ -117,7 +116,6 @@ class HotBarItem:
         else:
             self.surf.fill((0, 0, 0))
         self.ui.blit(self.surf, (self.pos * 24 + 4, 4))
-        # self.ui.blit(self.surf, (4, 4))
 
 
 class LightSource:
@@ -155,8 +153,6 @@ class Leaf:
         self.surf.blit(
             pygame.transform.rotate(self.img, self.r), (int(self.x), int(self.y))
         )
-        # pygame.draw.circle(self.surf, (255, 0, 0), self.center, 16)
-        # pygame.draw.circle(self.surf, (255, 255, 0), (self.sx, self.sy + 45), 5)
 
         if self.y < self.sy + 40:
             self.y += random.randint(0, 5) / 4
@@ -221,16 +217,13 @@ class Creeper(Game):
         self.creeper = pygame.image.load("assets/creeper/idle/1.png")
         self.bee = Bee()
         x = 0
-        # self.hotbar = [HotBarItem(game=self, surf=self.ui, pos=pos) for pos in range(8)]
         self.hotbar = HotBar(game=self, surf=self.ui)
         self.leafs = []
         self.trees = []
         for i in range(10):
             x += random.randint(10, 110)
             y = random.randint(180, 200)
-            # self.leafs.extend(
-            #     [Leaf(self, self.screen, self.leaf, (x + 25, y + 25)) for i in range(2)]
-            # )
+
             scale = random.randint(42, 86)
             self.trees.append(
                 TreeSprite(
@@ -242,18 +235,6 @@ class Creeper(Game):
                     surf=self.background,
                 )
             )
-        # for i in range(10):
-        #     x += random.randint(10, 110)
-        #     y = random.randint(180, 200)
-        #     scale = random.randint(42, 86)
-        #     self.foreground.blit(
-        #         pygame.transform.flip(
-        #             pygame.transform.scale(random.choice(self.trees), (scale, scale)),
-        #             random.randint(0, 1),
-        #             False,
-        #         ),
-        #         (x, y),
-        #     )
 
     def attack(self):
 
@@ -265,11 +246,6 @@ class Creeper(Game):
             tree.health -= 10
             tree.hit = True
             tree.shake()
-        # for tree in self.trees:
-
-        #     collide = tree.rect.collidelist(
-        #     # pygame.sprite.collide_mask(tree, self.mouse_box)
-        #     print(collide)
 
     def game(self):
         creeper = next(self.creepers)
