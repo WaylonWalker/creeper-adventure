@@ -57,7 +57,7 @@ background_color = "#B73CF6"
 start_url = "/"
 short_name = "creeper adventure"
 display = "minimal-ui"
-icon = "icon.png"
+icon = "creeper-1.png"
 
 
 # use a different template than the built in one
