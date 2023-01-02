@@ -141,6 +141,11 @@ class HotBarItem:
             self.ui.blit(
                 pygame.transform.scale(self.img, (16, 16)), (self.pos * 24 + 4, 4)
             )
+            font = pygame.font.SysFont(None, 24)
+            qty = str(self.game.game.inventory[self.type])
+            img = font.render(qty, True, (255, 255, 255))
+            self.ui.blit(pygame.transform.scale(img, (8, 8)), (self.pos * 24 + 4, 4))
+
         self.ui.blit(self.surf.convert_alpha(), (self.pos * 24 + 4, 4))
 
 
@@ -215,7 +220,7 @@ class Bee:
 class Creeper(Game):
     def __init__(self):
         super().__init__()
-        self.inventory = {"log": 10}
+        self.inventory = {}
         self.day_len = 1000 * 60
         self.background = pygame.Surface(self.screen.get_size())
         self.foreground = pygame.Surface(self.screen.get_size())
@@ -246,7 +251,6 @@ class Creeper(Game):
         self.bee = Bee()
         x = 0
         self.hotbar = HotBar(game=self, surf=self.ui)
-        self.hotbar.items[0].type = "log"
         self.leafs = []
         self.trees = []
         for i in range(10):
@@ -319,6 +323,9 @@ class Creeper(Game):
             (0, 0),
             special_flags=pygame.BLEND_RGBA_MULT,
         )
+        for i, item in enumerate(self.inventory):
+            self.hotbar.items[i].type = item
+
         for hot_bar_item in self.hotbar.items:
             hot_bar_item.draw()
 
