@@ -121,6 +121,12 @@ class HotBar:
         else:
             self.items[next_idx].selected = True
 
+    def draw(self):
+        for i, item in enumerate(self.game.inventory):
+            self.items[i].type = item
+        for hot_bar_item in self.items:
+            hot_bar_item.draw()
+
 
 class HotBarItem:
     def __init__(self, game: Game, surf, pos=0):
@@ -328,11 +334,8 @@ class Creeper(Game):
             (0, 0),
             special_flags=pygame.BLEND_RGBA_MULT,
         )
-        for i, item in enumerate(self.inventory):
-            self.hotbar.items[i].type = item
 
-        for hot_bar_item in self.hotbar.items:
-            hot_bar_item.draw()
+        self.hotbar.draw()
 
         self.mouse_box = MouseSprite(self.screen, hotbar=self.hotbar)
 
