@@ -10,9 +10,9 @@ from game import Game
 
 
 class MouseSprite:
-    def __init__(self, surf):
+    def __init__(self, surf, hotbar):
         self.surf = surf
-        self.image = pygame.image.load("assets/spotlight.png")
+        self.hotbar = hotbar
 
     @property
     def mouse_pos(self):
@@ -23,7 +23,14 @@ class MouseSprite:
         return pygame.Rect(self.mouse_pos, (4, 4))
 
     def draw(self):
-        pygame.draw.rect(self.surf, (255, 0, 0), self.rect)
+        if self.hotbar.selected.type is None:
+            pygame.draw.rect(self.surf, (255, 0, 0), self.rect)
+        else:
+            self.img = pygame.image.load(f"assets/{self.hotbar.selected.type}.png")
+            self.surf.blit(
+                pygame.transform.scale(self.img, (32, 32)),
+                [i - (i % 32) for i in pygame.mouse.get_pos()],
+            )
 
 
 class TreeSprite:
@@ -208,10 +215,11 @@ class Bee:
 class Creeper(Game):
     def __init__(self):
         super().__init__()
-        self.inventory = {}
+        self.inventory = {"log": 10}
         self.day_len = 1000 * 60
         self.background = pygame.Surface(self.screen.get_size())
         self.foreground = pygame.Surface(self.screen.get_size())
+        self.build = pygame.Surface(self.screen.get_size())
         self.ui = pygame.Surface((24 * 8, 24), pygame.SRCALPHA, 32).convert_alpha()
         self.ui.fill((50, 50, 50))
         self.darkness = pygame.Surface(self.screen.get_size()).convert_alpha()
@@ -238,6 +246,7 @@ class Creeper(Game):
         self.bee = Bee()
         x = 0
         self.hotbar = HotBar(game=self, surf=self.ui)
+        self.hotbar.items[0].type = "log"
         self.leafs = []
         self.trees = []
         for i in range(10):
@@ -273,14 +282,12 @@ class Creeper(Game):
     def process_deaths(self):
         for i, tree in enumerate(copy(self.trees)):
             if tree.health <= 0:
-                self.hotbar.items[0].type = "log"
                 self.inventory["log"] = self.inventory.get("log", 0) + 10
                 del self.trees[i]
                 print(f"you have {self.inventory['log']} log")
 
     def game(self):
         creeper = next(self.creepers)
-        self.mouse_box = MouseSprite(self.screen)
         self.screen.blit(self.background, (0, 0))
         self.background.fill((0, 255, 247))
         self.process_deaths()
@@ -314,6 +321,8 @@ class Creeper(Game):
         )
         for hot_bar_item in self.hotbar.items:
             hot_bar_item.draw()
+
+        self.mouse_box = MouseSprite(self.screen, hotbar=self.hotbar)
 
         y = self.screen.get_size()[1] - 24 - 4
         x = self.screen.get_size()[0] / 2 - (24 * 8 - 8) / 2
