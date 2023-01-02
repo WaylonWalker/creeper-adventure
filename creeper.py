@@ -48,6 +48,7 @@ class TreeSprite:
     def shake(self):
         if self.shaking == 0:
             self.shaking = 10
+            self.shaking_magnitude = random.randint(0, 10)
         self.leafs.extend(
             [
                 Leaf(
@@ -59,7 +60,7 @@ class TreeSprite:
                     ),
                     lifespan=1,
                 )
-                for i in range(2)
+                for i in range(int(self.shaking_magnitude / 2))
             ]
         )
 
@@ -68,7 +69,7 @@ class TreeSprite:
         if self.shaking == 0:
             return 0
         self.shaking -= 1
-        return random.randint(-15, 15)
+        return random.randint(-self.shaking_magnitude, self.shaking_magnitude)
 
     @property
     def rect(self):
