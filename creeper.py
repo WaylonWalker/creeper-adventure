@@ -172,7 +172,7 @@ class HotBarItem:
                     self.img,
                     (self.scale - self.margin * 2, self.scale - self.margin * 2),
                 ),
-                (self.pos * self.scale + self.margin, margin),
+                (self.pos * self.scale + self.margin, self.margin),
             )
             font = pygame.font.SysFont(None, self.scale)
             qty = str(self.game.game.inventory[self.type])
@@ -186,6 +186,10 @@ class HotBarItem:
             self.surf.convert_alpha(),
             (self.pos * self.scale + self.margin, self.margin),
         )
+
+
+# class Menu():
+#     def __init__(self, game:Game):
 
 
 class LightSource:
