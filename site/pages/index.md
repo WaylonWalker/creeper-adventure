@@ -14,3 +14,18 @@ Creeper adventure is a game I am making with my son.
 
 * [windows](./creeper-windows-latest.zip)
 * [linux](./creeper-linux-latest.zip)
+
+## Windows
+
+unzip the file and run creeper.exe.
+
+## Linux
+
+unzip the file.
+
+``` bash
+unzip creeper-linux-latest
+cd creeper
+chmod +x creeper
+creeper
+```
