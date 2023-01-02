@@ -188,8 +188,29 @@ class HotBarItem:
         )
 
 
-# class Menu():
-#     def __init__(self, game:Game):
+class Menu:
+    def __init__(
+        self, game: Game, title: str = "menu", scale: int = 32, margin: int = 16
+    ):
+        self.game = game
+        self.is_open = False
+        self.title = title
+        self.scale = scale
+        self.margin = margin
+
+    def draw(self):
+        if self.is_open:
+            surf = pygame.Surface(self.game.screen.get_size()).convert_alpha()
+            surf.fill((0, 0, 0, 225))
+            font = pygame.font.SysFont(None, self.scale)
+            img = font.render(self.title, True, (255, 255, 255))
+            surf.blit(
+                img,
+                (100, 100)
+                # (100 * self.scale + self.margin, self.margin),
+            )
+
+            self.game.screen.blit(surf, (0, 0))
 
 
 class LightSource:
@@ -312,6 +333,8 @@ class Creeper(Game):
         self.joysticks = {}
         self.hotbar_back_debounce = 0
         self.hotbar_forward_debounce = 0
+        self.inventory_open_debounce = 0
+        self.inventory_menu = Menu(self, title="inventory")
 
     def attack(self):
 
@@ -334,6 +357,72 @@ class Creeper(Game):
                     # get this one on the next pass
                     # killing two items in the same frame will error
                     ...
+
+    def normal_keys(self):
+        keys = self.keys
+        if keys[pygame.K_a]:
+            self.x -= 10
+        if keys[pygame.K_d]:
+            self.x += 10
+        if keys[pygame.K_k]:
+            self.hotbar.next(1)
+        if keys[pygame.K_j]:
+            self.hotbar.next(-1)
+
+        for event in self.events:
+            if event.type == pygame.MOUSEWHEEL:
+                self.hotbar.next(event.y)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                self.attack()
+
+            if event.type == pygame.JOYDEVICEADDED:
+                # This event will be generated when the program starts for every
+                # joystick, filling up the list without needing to create them manually.
+                joy = pygame.joystick.Joystick(event.device_index)
+                self.joysticks[joy.get_instance_id()] = joy
+            if event.type == pygame.JOYDEVICEREMOVED:
+                del self.joysticks[event.instance_id]
+
+        for joystick in self.joysticks.values():
+
+            if joystick.get_button(4) and self.hotbar_back_debounce:
+                self.hotbar.next(-1)
+                self.hotbar_back_debounce = 0
+            elif not joystick.get_button(4):
+                self.hotbar_back_debounce = 1
+
+            if joystick.get_button(5) and self.hotbar_forward_debounce:
+                self.hotbar.next(1)
+                self.hotbar_forward_debounce = 0
+            elif not joystick.get_button(5):
+                self.hotbar_forward_debounce = 1
+
+            if (
+                keys[pygame.K_e] or joystick.get_button(2)
+            ) and self.inventory_open_debounce:
+                self.inventory_menu.is_open = not self.inventory_menu.is_open
+                self.inventory_open_debounce = 0
+            elif not (keys[pygame.K_e] or joystick.get_button(2)):
+                self.inventory_open_debounce = 1
+
+            hats = joystick.get_numhats()
+            for i in range(hats):
+                hat = joystick.get_hat(i)
+                if hat[0] == 1:
+                    self.x += 10
+                if hat[0] == -1:
+                    self.x -= 10
+
+    def inventory_keys(self):
+        keys = self.keys
+        for joystick in self.joysticks.values():
+            if (
+                keys[pygame.K_e] or joystick.get_button(2)
+            ) and self.inventory_open_debounce:
+                self.inventory_menu.is_open = not self.inventory_menu.is_open
+                self.inventory_open_debounce = 0
+            elif not (keys[pygame.K_e] or joystick.get_button(2)):
+                self.inventory_open_debounce = 1
 
     def game(self):
         creeper = next(self.creepers)
@@ -370,56 +459,16 @@ class Creeper(Game):
         )
 
         self.hotbar.draw()
+        self.inventory_menu.draw()
 
         self.mouse_box = MouseSprite(self.screen, hotbar=self.hotbar)
 
-        keys = pygame.key.get_pressed()
-
-        if keys[pygame.K_a]:
-            self.x -= 10
-        if keys[pygame.K_d]:
-            self.x += 10
-        if keys[pygame.K_k]:
-            self.hotbar.next(1)
-        if keys[pygame.K_j]:
-            self.hotbar.next(-1)
-        for event in self.events:
-            if event.type == pygame.MOUSEWHEEL:
-                self.hotbar.next(event.y)
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                self.attack()
-
-            if event.type == pygame.JOYDEVICEADDED:
-                # This event will be generated when the program starts for every
-                # joystick, filling up the list without needing to create them manually.
-                joy = pygame.joystick.Joystick(event.device_index)
-                self.joysticks[joy.get_instance_id()] = joy
-            if event.type == pygame.JOYDEVICEREMOVED:
-                del self.joysticks[event.instance_id]
-
-        for joystick in self.joysticks.values():
-
-            if joystick.get_button(4) and self.hotbar_back_debounce:
-                self.hotbar.next(-1)
-                self.hotbar_back_debounce = 0
-            elif not joystick.get_button(4):
-                self.hotbar_back_debounce = 1
-
-            if joystick.get_button(5) and self.hotbar_forward_debounce:
-                self.hotbar.next(1)
-                self.hotbar_forward_debounce = 0
-            elif not joystick.get_button(5):
-                self.hotbar_forward_debounce = 1
-
-            hats = joystick.get_numhats()
-            for i in range(hats):
-                hat = joystick.get_hat(i)
-                if hat[0] == 1:
-                    self.x += 10
-                if hat[0] == -1:
-                    self.x -= 10
-
         self.mouse_box.draw()
+
+        if self.inventory_menu.is_open:
+            self.inventory_keys()
+        else:
+            self.normal_keys()
 
 
 if __name__ == "__main__":
