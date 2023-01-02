@@ -1,4 +1,5 @@
 import random
+from copy import copy
 from itertools import cycle, repeat
 from pathlib import Path
 
@@ -121,13 +122,19 @@ class HotBarItem:
         self.pos = pos
         self.selected = False
         self.surf.fill((0, 0, 0))
+        self.type = None
 
     def draw(self):
+        self.surf.fill((0, 0, 0, 20))
         if self.selected:
-            self.surf.fill((100, 100, 100))
-        else:
-            self.surf.fill((0, 0, 0))
-        self.ui.blit(self.surf, (self.pos * 24 + 4, 4))
+            self.surf.fill((185, 185, 205, 60))
+
+        if self.type:
+            self.img = pygame.image.load(f"assets/{self.type}.png")
+            self.ui.blit(
+                pygame.transform.scale(self.img, (16, 16)), (self.pos * 24 + 4, 4)
+            )
+        self.ui.blit(self.surf.convert_alpha(), (self.pos * 24 + 4, 4))
 
 
 class LightSource:
@@ -201,6 +208,7 @@ class Bee:
 class Creeper(Game):
     def __init__(self):
         super().__init__()
+        self.inventory = {}
         self.day_len = 1000 * 60
         self.background = pygame.Surface(self.screen.get_size())
         self.foreground = pygame.Surface(self.screen.get_size())
@@ -248,6 +256,8 @@ class Creeper(Game):
                 )
             )
         self.joysticks = {}
+        self.hotbar_back_debounce = 0
+        self.hotbar_forward_debounce = 0
 
     def attack(self):
 
@@ -260,11 +270,20 @@ class Creeper(Game):
             tree.hit = True
             tree.shake()
 
+    def process_deaths(self):
+        for i, tree in enumerate(copy(self.trees)):
+            if tree.health <= 0:
+                self.hotbar.items[0].type = "log"
+                self.inventory["log"] = self.inventory.get("log", 0) + 10
+                del self.trees[i]
+                print(f"you have {self.inventory['log']} log")
+
     def game(self):
         creeper = next(self.creepers)
         self.mouse_box = MouseSprite(self.screen)
         self.screen.blit(self.background, (0, 0))
         self.background.fill((0, 255, 247))
+        self.process_deaths()
         for tree in self.trees:
             tree.draw()
 
@@ -324,27 +343,24 @@ class Creeper(Game):
                 # joystick, filling up the list without needing to create them manually.
                 joy = pygame.joystick.Joystick(event.device_index)
                 self.joysticks[joy.get_instance_id()] = joy
-                print(f"Joystick {joy.get_instance_id()} connencted")
             if event.type == pygame.JOYDEVICEREMOVED:
                 del self.joysticks[event.instance_id]
-                print(f"Joystick {event.instance_id} disconnected")
 
-        print(self.joysticks)
         for joystick in self.joysticks.values():
 
-            if joystick.get_button(4) and self.hotbar_debounce:
+            if joystick.get_button(4) and self.hotbar_back_debounce:
                 self.hotbar.next(-1)
-                self.hotbar_debounce = 0
+                self.hotbar_back_debounce = 0
+            elif not joystick.get_button(4):
+                self.hotbar_back_debounce = 1
 
-            if joystick.get_button(5) and self.hotbar_debounce:
+            if joystick.get_button(5) and self.hotbar_forward_debounce:
                 self.hotbar.next(1)
-                self.hotbar_debounce = 0
-
-            if not joystick.get_button(4) and not joystick.get_button(5):
-                self.hotbar_debounce = 1
+                self.hotbar_forward_debounce = 0
+            elif not joystick.get_button(5):
+                self.hotbar_forward_debounce = 1
 
             hats = joystick.get_numhats()
-            print("numhats", hats)
             for i in range(hats):
                 hat = joystick.get_hat(i)
                 if hat[0] == 1:
