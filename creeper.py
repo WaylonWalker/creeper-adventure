@@ -287,8 +287,12 @@ class Creeper(Game):
         for i, tree in enumerate(copy(self.trees)):
             if tree.health <= 0:
                 self.inventory["log"] = self.inventory.get("log", 0) + 10
-                del self.trees[i]
-                print(f"you have {self.inventory['log']} log")
+                try:
+                    del self.trees[i]
+                except IndexError:
+                    # get this one on the next pass
+                    # killing two items in the same frame will error
+                    ...
 
     def game(self):
         creeper = next(self.creepers)
