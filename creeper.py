@@ -98,11 +98,21 @@ class TreeSprite:
 
 
 class HotBar:
-    def __init__(self, game: Game, surf, num=8):
-        self.ui = surf
+    def __init__(self, game: Game, scale=32, num=10, margin=None):
+        if margin is None:
+            margin = scale * 0.1
+        self.scale = scale
+        self.num = num
+        self.margin = margin
+        self.ui = pygame.Surface(
+            (self.scale * self.num, self.scale), pygame.SRCALPHA, 32
+        ).convert_alpha()
         self.game = game
         self.items = [
-            HotBarItem(game=self, surf=self.ui, pos=pos) for pos in range(num)
+            HotBarItem(
+                game=self, surf=self.ui, pos=pos, scale=self.scale, margin=self.margin
+            )
+            for pos in range(num)
         ]
         self.items[0].selected = True
 
@@ -122,38 +132,60 @@ class HotBar:
             self.items[next_idx].selected = True
 
     def draw(self):
+        self.ui.fill((50, 50, 50))
         for i, item in enumerate(self.game.inventory):
             self.items[i].type = item
         for hot_bar_item in self.items:
             hot_bar_item.draw()
 
+        y = self.game.screen.get_size()[1] - self.scale - self.margin
+        x = (self.game.screen.get_size()[0] - self.scale * self.num) / 2
+        self.game.screen.blit(
+            self.ui,
+            (x, y),
+        )
+
 
 class HotBarItem:
-    def __init__(self, game: Game, surf, pos=0):
+    def __init__(self, game: Game, surf, pos=0, scale=24, margin=4):
         self.ui = surf
         self.game = game
-        self.surf = pygame.Surface((16, 16)).convert_alpha()
+        self.scale = scale
+        self.margin = margin
+        self.surf = pygame.Surface(
+            (self.scale - self.margin * 2, self.scale - self.margin * 2)
+        ).convert_alpha()
         self.pos = pos
         self.selected = False
         self.surf.fill((0, 0, 0))
         self.type = None
 
     def draw(self):
-        self.surf.fill((0, 0, 0, 20))
+        self.surf.fill((0, 0, 0, 60))
         if self.selected:
             self.surf.fill((185, 185, 205, 60))
 
         if self.type:
             self.img = pygame.image.load(f"assets/{self.type}.png")
             self.ui.blit(
-                pygame.transform.scale(self.img, (16, 16)), (self.pos * 24 + 4, 4)
+                pygame.transform.scale(
+                    self.img,
+                    (self.scale - self.margin * 2, self.scale - self.margin * 2),
+                ),
+                (self.pos * self.scale + self.margin, margin),
             )
-            font = pygame.font.SysFont(None, 24)
+            font = pygame.font.SysFont(None, self.scale)
             qty = str(self.game.game.inventory[self.type])
             img = font.render(qty, True, (255, 255, 255))
-            self.ui.blit(pygame.transform.scale(img, (8, 8)), (self.pos * 24 + 4, 4))
+            self.ui.blit(
+                pygame.transform.scale(img, (self.scale * 0.6, self.scale * 0.6)),
+                (self.pos * self.scale + self.margin, self.margin),
+            )
 
-        self.ui.blit(self.surf.convert_alpha(), (self.pos * 24 + 4, 4))
+        self.ui.blit(
+            self.surf.convert_alpha(),
+            (self.pos * self.scale + self.margin, self.margin),
+        )
 
 
 class LightSource:
@@ -232,8 +264,6 @@ class Creeper(Game):
         self.background = pygame.Surface(self.screen.get_size())
         self.foreground = pygame.Surface(self.screen.get_size())
         self.build = pygame.Surface(self.screen.get_size())
-        self.ui = pygame.Surface((24 * 8, 24), pygame.SRCALPHA, 32).convert_alpha()
-        self.ui.fill((50, 50, 50))
         self.darkness = pygame.Surface(self.screen.get_size()).convert_alpha()
 
         self.background.fill((0, 255, 247))
@@ -257,7 +287,7 @@ class Creeper(Game):
         self.creeper = pygame.image.load("assets/creeper/idle/1.png")
         self.bee = Bee()
         x = 0
-        self.hotbar = HotBar(game=self, surf=self.ui)
+        self.hotbar = HotBar(game=self)
         self.leafs = []
         self.trees = []
         for i in range(10):
@@ -338,13 +368,6 @@ class Creeper(Game):
         self.hotbar.draw()
 
         self.mouse_box = MouseSprite(self.screen, hotbar=self.hotbar)
-
-        y = self.screen.get_size()[1] - 24 - 4
-        x = self.screen.get_size()[0] / 2 - (24 * 8 - 8) / 2
-        self.screen.blit(
-            self.ui,
-            (x, y),
-        )
 
         keys = pygame.key.get_pressed()
 
