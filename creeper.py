@@ -22,14 +22,17 @@ class MouseSprite:
     def rect(self):
         return pygame.Rect(self.mouse_pos, (4, 4))
 
+    def get_nearest_block_pos(self):
+        return ([i - (i % 16) for i in pygame.mouse.get_pos()],)
+
     def draw(self):
         if self.hotbar.selected.type is None:
             pygame.draw.rect(self.surf, (255, 0, 0), self.rect)
         else:
             self.img = pygame.image.load(f"assets/{self.hotbar.selected.type}.png")
             self.surf.blit(
-                pygame.transform.scale(self.img, (32, 32)),
-                [i - (i % 32) for i in pygame.mouse.get_pos()],
+                pygame.transform.scale(self.img, (16, 16)),
+                self.get_nearest_block_pos(),
             )
 
 
@@ -241,6 +244,22 @@ class DebugMenu(Menu):
             ),
             (10, 50),
         )
+        self.surf.blit(
+            self.font.render(
+                f"nearest block pos: {self.game.mouse_box.get_nearest_block_pos()}",
+                True,
+                (255, 255, 255),
+            ),
+            (10, 65),
+        )
+        self.surf.blit(
+            self.font.render(
+                f"walking sound: {self.game.walking_sound_is_playing}",
+                True,
+                (255, 255, 255),
+            ),
+            (10, 80),
+        )
 
 
 class LightSource:
@@ -320,6 +339,9 @@ class Creeper(Game):
         self.foreground = pygame.Surface(self.screen.get_size())
         self.build = pygame.Surface(self.screen.get_size())
         self.darkness = pygame.Surface(self.screen.get_size()).convert_alpha()
+        self.axe_sound = pygame.mixer.Sound("assets/sounds/axe.mp3")
+        self.walking_sound = pygame.mixer.Sound("assets/sounds/walking.mp3")
+        self.walking_sound_is_playing = False
 
         self.background.fill((0, 255, 247))
         self.x, self.y = [i / 2 for i in self.screen.get_size()]
@@ -360,6 +382,8 @@ class Creeper(Game):
                     surf=self.background,
                 )
             )
+
+        self.mouse_box = MouseSprite(self.screen, hotbar=self.hotbar)
         self.joysticks = {}
         self.hotbar_back_debounce = 1
         self.hotbar_forward_debounce = 1
@@ -383,7 +407,12 @@ class Creeper(Game):
             tree.health -= 10
             tree.hit = True
             tree.shake()
+        self.axe_sound.play()
         return True
+
+    def place_block(self):
+        if self.hotbar.selected.type is None:
+            return False
 
     def process_deaths(self):
         for i, tree in enumerate(copy(self.trees)):
@@ -413,6 +442,8 @@ class Creeper(Game):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if pygame.mouse.get_pressed()[0]:
                     did_attack = self.attack()
+                if pygame.mouse.get_pressed()[2]:
+                    did_place = self.place_block()
 
             if event.type == pygame.JOYDEVICEADDED:
                 # This event will be generated when the program starts for every
@@ -488,6 +519,18 @@ class Creeper(Game):
             elif not (keys[pygame.K_ESCAPE] or joystick.get_button(9)):
                 self.main_open_debounce = 1
 
+    def make_sound(self):
+        if not hasattr(self, "last_x"):
+            self.last_x = self.x
+        if self.last_x == self.x and self.walking_sound_is_playing:
+            self.walking_sound.stop()
+            self.walking_sound_is_playing = False
+
+        if self.last_x != self.x and not self.walking_sound_is_playing:
+            self.walking_sound.play()
+            self.walking_sound_is_playing = True
+        self.last_x = self.x
+
     def game(self):
         creeper = next(self.creepers)
         self.screen.blit(self.background, (0, 0))
@@ -530,6 +573,8 @@ class Creeper(Game):
         self.mouse_box = MouseSprite(self.screen, hotbar=self.hotbar)
 
         self.mouse_box.draw()
+
+        self.make_sound()
 
         if self.inventory_menu.is_open:
             self.inventory_keys()

@@ -4,6 +4,7 @@ import pygame
 class Game:
     def __init__(self):
         pygame.init()
+        pygame.mixer.init()
         pygame.display.set_caption(__file__)
 
         self.screen_size = (854, 480)
