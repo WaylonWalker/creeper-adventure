@@ -190,27 +190,53 @@ class HotBarItem:
 
 class Menu:
     def __init__(
-        self, game: Game, title: str = "menu", scale: int = 32, margin: int = 16
+        self,
+        game: Game,
+        title: str = "menu",
+        scale: int = 32,
+        margin: int = 16,
+        alpha=225,
     ):
         self.game = game
         self.is_open = False
         self.title = title
         self.scale = scale
         self.margin = margin
+        self.alpha = alpha
 
     def draw(self):
         if self.is_open:
-            surf = pygame.Surface(self.game.screen.get_size()).convert_alpha()
-            surf.fill((0, 0, 0, 225))
+            self.surf = pygame.Surface(self.game.screen.get_size()).convert_alpha()
+            self.surf.fill((0, 0, 0, self.alpha))
             font = pygame.font.SysFont(None, self.scale)
             img = font.render(self.title, True, (255, 255, 255))
-            surf.blit(
+            self.surf.blit(
                 img,
-                (100, 100)
+                (10, 10)
                 # (100 * self.scale + self.margin, self.margin),
             )
+            self._draw()
 
-            self.game.screen.blit(surf, (0, 0))
+            self.game.screen.blit(self.surf, (0, 0))
+
+    def _draw(self):
+        ...
+
+
+class DebugMenu(Menu):
+    def __init__(self, game):
+        super().__init__(title="Debug Menu", game=game, alpha=0)
+        self.font = pygame.font.SysFont(None, 20)
+
+    def _draw(self):
+        self.surf.blit(
+            self.font.render(f"x: {self.game.x}", True, (255, 255, 255)),
+            (10, 30),
+        )
+        self.surf.blit(
+            self.font.render(f"y: {self.game.y}", True, (255, 255, 255)),
+            (10, 50),
+        )
 
 
 class LightSource:
@@ -334,7 +360,11 @@ class Creeper(Game):
         self.hotbar_back_debounce = 0
         self.hotbar_forward_debounce = 0
         self.inventory_open_debounce = 0
+        self.debug_open_debounce = 0
+        self.main_open_debounce = 0
         self.inventory_menu = Menu(self, title="inventory")
+        self.debug_menu = DebugMenu(self)
+        self.main_menu = Menu(self, title="main menu")
 
     def attack(self):
 
@@ -405,6 +435,20 @@ class Creeper(Game):
             elif not (keys[pygame.K_e] or joystick.get_button(2)):
                 self.inventory_open_debounce = 1
 
+            if (
+                keys[pygame.K_ESCAPE] or joystick.get_button(9)
+            ) and self.main_open_debounce:
+                self.main_menu.is_open = not self.main_menu.is_open
+                self.main_open_debounce = 0
+            elif not (keys[pygame.K_ESCAPE] or joystick.get_button(9)):
+                self.main_open_debounce = 1
+
+            if keys[pygame.K_F3] and self.debug_open_debounce:
+                self.debug_menu.is_open = not self.debug_menu.is_open
+                self.debug_open_debounce = 0
+            elif not keys[pygame.K_F3]:
+                self.debug_open_debounce = 1
+
             hats = joystick.get_numhats()
             for i in range(hats):
                 hat = joystick.get_hat(i)
@@ -423,6 +467,17 @@ class Creeper(Game):
                 self.inventory_open_debounce = 0
             elif not (keys[pygame.K_e] or joystick.get_button(2)):
                 self.inventory_open_debounce = 1
+
+    def main_keys(self):
+        keys = self.keys
+        for joystick in self.joysticks.values():
+            if (
+                keys[pygame.K_ESCAPE] or joystick.get_button(9)
+            ) and self.main_open_debounce:
+                self.main_menu.is_open = not self.main_menu.is_open
+                self.main_open_debounce = 0
+            elif not (keys[pygame.K_ESCAPE] or joystick.get_button(9)):
+                self.main_open_debounce = 1
 
     def game(self):
         creeper = next(self.creepers)
@@ -459,7 +514,9 @@ class Creeper(Game):
         )
 
         self.hotbar.draw()
+        self.debug_menu.draw()
         self.inventory_menu.draw()
+        self.main_menu.draw()
 
         self.mouse_box = MouseSprite(self.screen, hotbar=self.hotbar)
 
@@ -467,6 +524,8 @@ class Creeper(Game):
 
         if self.inventory_menu.is_open:
             self.inventory_keys()
+        elif self.main_menu.is_open:
+            self.main_keys()
         else:
             self.normal_keys()
 
