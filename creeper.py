@@ -230,11 +230,15 @@ class DebugMenu(Menu):
 
     def _draw(self):
         self.surf.blit(
-            self.font.render(f"x: {self.game.x}", True, (255, 255, 255)),
-            (10, 30),
+            self.font.render(
+                f"(x, y): ({self.game.x}, {self.game.y})", True, (255, 255, 255)
+            ),
+            (10, 35),
         )
         self.surf.blit(
-            self.font.render(f"y: {self.game.y}", True, (255, 255, 255)),
+            self.font.render(
+                f"mouse_pos: {pygame.mouse.get_pos()}", True, (255, 255, 255)
+            ),
             (10, 50),
         )
 
@@ -357,13 +361,14 @@ class Creeper(Game):
                 )
             )
         self.joysticks = {}
-        self.hotbar_back_debounce = 0
-        self.hotbar_forward_debounce = 0
-        self.inventory_open_debounce = 0
-        self.debug_open_debounce = 0
-        self.main_open_debounce = 0
+        self.hotbar_back_debounce = 1
+        self.hotbar_forward_debounce = 1
+        self.inventory_open_debounce = 1
+        self.debug_open_debounce = 1
+        self.main_open_debounce = 1
         self.inventory_menu = Menu(self, title="inventory")
         self.debug_menu = DebugMenu(self)
+        self.debug_menu.is_open = True
         self.main_menu = Menu(self, title="main menu")
 
     def attack(self):
@@ -371,11 +376,14 @@ class Creeper(Game):
         collisions = self.mouse_box.rect.collidedictall(
             {tree: tree.rect for tree in self.trees}
         )
+        if not collisions:
+            return False
         for collision in collisions:
             tree = collision[0]
             tree.health -= 10
             tree.hit = True
             tree.shake()
+        return True
 
     def process_deaths(self):
         for i, tree in enumerate(copy(self.trees)):
@@ -403,7 +411,8 @@ class Creeper(Game):
             if event.type == pygame.MOUSEWHEEL:
                 self.hotbar.next(event.y)
             if event.type == pygame.MOUSEBUTTONDOWN:
-                self.attack()
+                if pygame.mouse.get_pressed()[0]:
+                    did_attack = self.attack()
 
             if event.type == pygame.JOYDEVICEADDED:
                 # This event will be generated when the program starts for every
