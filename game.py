@@ -29,6 +29,7 @@ class Game:
             self.events = pygame.event.get()
             self.should_quit()
             self.reset_screen()
+            self.keys = pygame.key.get_pressed()
             self.game()
             for surf in self.surfs:
                 pygame.blit(surf)
