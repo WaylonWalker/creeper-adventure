@@ -12,20 +12,29 @@ ASSETS = Path(__file__).parent / "assets"
 
 
 class MouseSprite:
-    def __init__(self, surf, hotbar):
+    def __init__(self, game, surf, hotbar):
+        self.game = game
         self.surf = surf
         self.hotbar = hotbar
 
     @property
     def mouse_pos(self):
-        return [i - 2 for i in pygame.mouse.get_pos()]
+        return (
+            pygame.mouse.get_pos()[0] - 2 - self.game.camera[0],
+            pygame.mouse.get_pos()[1] - 2 - self.game.camera[1],
+        )
 
     @property
     def rect(self):
         return pygame.Rect(self.mouse_pos, (4, 4))
 
     def get_nearest_block_pos(self):
-        return ([i - (i % 16) for i in pygame.mouse.get_pos()],)
+        return (
+            [
+                self.mouse_pos[0] - (self.mouse_pos[0] % 16),
+                self.mouse_pos[1] - (self.mouse_pos[1] % 16),
+            ],
+        )
 
     def draw(self):
         if self.hotbar.selected.type is None:
@@ -336,6 +345,7 @@ class Creeper(Game):
     def __init__(self, debug=False):
         super().__init__()
         self.inventory = {}
+        self.camera = (0, 0)
         self.day_len = 1000 * 60
         self.background = pygame.Surface(self.screen.get_size())
         self.foreground = pygame.Surface(self.screen.get_size())
@@ -395,7 +405,7 @@ class Creeper(Game):
                 )
             )
 
-        self.mouse_box = MouseSprite(self.screen, hotbar=self.hotbar)
+        self.mouse_box = MouseSprite(self, self.background, hotbar=self.hotbar)
         self.joysticks = {}
         self.hotbar_back_debounce = 1
         self.hotbar_forward_debounce = 1
@@ -445,7 +455,7 @@ class Creeper(Game):
             self.x += 10
         if keys[pygame.K_w]:
             self.y -= 10
-        if keys[pygame.K_d]:
+        if keys[pygame.K_s]:
             self.y += 10
         if keys[pygame.K_k]:
             self.hotbar.next(1)
@@ -472,9 +482,12 @@ class Creeper(Game):
         for joystick in self.joysticks.values():
 
             if joystick.get_button(4) and self.hotbar_back_debounce:
+                print(self.hotbar_back_debounce)
                 self.hotbar.next(-1)
                 self.hotbar_back_debounce = 0
-            elif not joystick.get_button(4):
+                print(self.hotbar_back_debounce)
+            if not joystick.get_button(4):
+                print("resetting")
                 self.hotbar_back_debounce = 1
 
             if joystick.get_button(5) and self.hotbar_forward_debounce:
@@ -567,7 +580,8 @@ class Creeper(Game):
         self.last_y = self.y
 
     def game(self):
-        self.screen.blit(self.background, (0, 0))
+        # self.camera = (self.camera[0] + 1, self.camera[1])
+        self.screen.blit(self.background, self.camera)
         self.background.fill((0, 255, 247))
         self.process_deaths()
         for tree in self.trees:
@@ -607,7 +621,7 @@ class Creeper(Game):
         self.inventory_menu.draw()
         self.main_menu.draw()
 
-        self.mouse_box = MouseSprite(self.screen, hotbar=self.hotbar)
+        self.mouse_box = MouseSprite(self, self.background, hotbar=self.hotbar)
 
         self.mouse_box.draw()
 
