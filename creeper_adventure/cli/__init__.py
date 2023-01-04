@@ -15,5 +15,4 @@ from ..creeper import main
 @click.pass_context
 @click.option("--debug", is_flag=True, help="start with the debug menu open")
 def creeper_adventure(ctx: click.Context, debug):
-    print(debug)
     main(debug)
