@@ -8,6 +8,8 @@ class Game:
         pygame.display.set_caption(__file__)
 
         self.screen_size = (854, 480)
+        self.screen_size = (1280, 800)
+        self.screen_size = (1920, 1080)
         self.screen = pygame.display.set_mode(self.screen_size)
         self.clock = pygame.time.Clock()
 

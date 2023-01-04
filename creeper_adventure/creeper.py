@@ -6,7 +6,9 @@ from pathlib import Path
 import pygame
 from more_itertools import flatten
 
-from game import Game
+from creeper_adventure.game import Game
+
+ASSETS = Path(__file__).parent / "assets"
 
 
 class MouseSprite:
@@ -29,7 +31,7 @@ class MouseSprite:
         if self.hotbar.selected.type is None:
             pygame.draw.rect(self.surf, (255, 0, 0), self.rect)
         else:
-            self.img = pygame.image.load(f"assets/{self.hotbar.selected.type}.png")
+            self.img = pygame.image.load(ASSETS / f"{self.hotbar.selected.type}.png")
             self.surf.blit(
                 pygame.transform.scale(self.img, (16, 16)),
                 self.get_nearest_block_pos(),
@@ -169,7 +171,7 @@ class HotBarItem:
             self.surf.fill((185, 185, 205, 60))
 
         if self.type:
-            self.img = pygame.image.load(f"assets/{self.type}.png")
+            self.img = pygame.image.load(ASSETS / f"{self.type}.png")
             self.ui.blit(
                 pygame.transform.scale(
                     self.img,
@@ -269,7 +271,7 @@ class LightSource:
         self.img = img
         self.center = center
         self.sx, self.sy = center
-        self.spot = pygame.image.load("assets/spotlight.png")
+        self.spot = pygame.image.load(ASSETS / "spotlight.png")
 
 
 class Leaf:
@@ -279,7 +281,7 @@ class Leaf:
         self.center = center
         self.sx, self.sy = center
         self.img = pygame.transform.scale(
-            pygame.image.load("assets/leaf.png"), (4, 4)
+            pygame.image.load(ASSETS / "leaf.png"), (4, 4)
         ).convert_alpha()
         self.lifespan = lifespan
         self.r = random.randint(0, 360)
@@ -314,7 +316,7 @@ class Leaf:
 
 class Bee:
     def __init__(self):
-        self.bee = pygame.image.load("assets/bee/idle/1.png")
+        self.bee = pygame.image.load(ASSETS / "bee/idle/1.png")
         self.x = 0
         self.y = 0
 
@@ -331,7 +333,7 @@ class Bee:
 
 
 class Creeper(Game):
-    def __init__(self):
+    def __init__(self, debug=False):
         super().__init__()
         self.inventory = {}
         self.day_len = 1000 * 60
@@ -339,29 +341,29 @@ class Creeper(Game):
         self.foreground = pygame.Surface(self.screen.get_size())
         self.build = pygame.Surface(self.screen.get_size())
         self.darkness = pygame.Surface(self.screen.get_size()).convert_alpha()
-        self.axe_sound = pygame.mixer.Sound("assets/sounds/axe.mp3")
-        self.walking_sound = pygame.mixer.Sound("assets/sounds/walking.mp3")
+        self.axe_sound = pygame.mixer.Sound(ASSETS / "sounds/axe.mp3")
+        self.walking_sound = pygame.mixer.Sound(ASSETS / "sounds/walking.mp3")
         self.walking_sound_is_playing = False
 
         self.background.fill((0, 255, 247))
         self.x, self.y = [i / 2 for i in self.screen.get_size()]
-        self.spot = pygame.image.load("assets/spotlight.png")
+        self.spot = pygame.image.load(ASSETS / "spotlight.png")
         self.light_power = 1.1
         self.leaf = pygame.transform.scale(
-            pygame.image.load("assets/leaf.png"), (4, 4)
+            pygame.image.load(ASSETS / "leaf.png"), (4, 4)
         ).convert_alpha()
         self.creepers = cycle(
             flatten(
                 [
                     repeat(pygame.image.load(img), 5)
-                    for img in Path("assets/stev/idle/").glob("*.png")
+                    for img in Path(ASSETS / "stev/idle/").glob("*.png")
                 ]
             )
         )
         self.tree_imgs = [
-            pygame.image.load(img) for img in Path("assets/oak_trees/").glob("*.png")
+            pygame.image.load(img) for img in Path(ASSETS / "oak_trees/").glob("*.png")
         ]
-        # self.creeper = pygame.image.load("assets/creeper/idle/1.png")
+        # self.creeper = pygame.image.load(ASSETS/"creeper/idle/1.png")
         self.creeper = next(self.creepers)
         self.bee = Bee()
         x = 0
@@ -402,7 +404,7 @@ class Creeper(Game):
         self.main_open_debounce = 1
         self.inventory_menu = Menu(self, title="inventory")
         self.debug_menu = DebugMenu(self)
-        self.debug_menu.is_open = True
+        self.debug_menu.is_open = debug
         self.main_menu = Menu(self, title="main menu")
 
     def attack(self):
@@ -619,6 +621,10 @@ class Creeper(Game):
             self.normal_keys()
 
 
-if __name__ == "__main__":
-    creeper = Creeper()
+def main(debug=False):
+    creeper = Creeper(debug=debug)
     creeper.run()
+
+
+if __name__ == "__main__":
+    main()
