@@ -1,5 +1,5 @@
-<img src='https://github.com/WaylonWalker/creeper-adventure/blob/main/creeper_adventure/assets/stev/idle/0.png' align="right">
-<img src='https://github.com/WaylonWalker/creeper-adventure/blob/main/creeper_adventure/assets/bee/idle/1.png' align="right">
+<img src='https://github.com/WaylonWalker/creeper-adventure/blob/main/creeper_adventure/assets/stev/idle/0.png?raw=true' align="right">
+<img src='https://github.com/WaylonWalker/creeper-adventure/blob/main/creeper_adventure/assets/bee/idle/1.png?raw=true' align="right">
 
 # creeper-adventure
 
