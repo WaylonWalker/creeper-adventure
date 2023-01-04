@@ -354,7 +354,7 @@ class Creeper(Game):
             flatten(
                 [
                     repeat(pygame.image.load(img), 10)
-                    for img in Path("assets/creeper/idle/").glob("*.png")
+                    for img in Path("assets/stev/idle/").glob("*.png")
                 ]
             )
         )
@@ -367,9 +367,18 @@ class Creeper(Game):
         self.hotbar = HotBar(game=self)
         self.leafs = []
         self.trees = []
+
+        x_range = [
+            self.screen.get_size()[0] * 0.1,
+            self.screen.get_size()[0] * 0.9,
+        ]
+        y_range = [
+            self.screen.get_size()[1] * 0.35,
+            self.screen.get_size()[1] * 0.5,
+        ]
         for i in range(10):
-            x += random.randint(10, 110)
-            y = random.randint(180, 200)
+            x = random.randint(*x_range)
+            y = random.randint(*y_range)
 
             scale = random.randint(42, 86)
             self.trees.append(
@@ -431,6 +440,10 @@ class Creeper(Game):
             self.x -= 10
         if keys[pygame.K_d]:
             self.x += 10
+        if keys[pygame.K_w]:
+            self.y -= 10
+        if keys[pygame.K_d]:
+            self.y += 10
         if keys[pygame.K_k]:
             self.hotbar.next(1)
         if keys[pygame.K_j]:
@@ -496,6 +509,10 @@ class Creeper(Game):
                     self.x += 10
                 if hat[0] == -1:
                     self.x -= 10
+                if hat[1] == -1:
+                    self.y += 10
+                if hat[1] == 1:
+                    self.y -= 10
 
     def inventory_keys(self):
         keys = self.keys
