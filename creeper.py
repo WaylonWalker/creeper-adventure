@@ -353,7 +353,7 @@ class Creeper(Game):
         self.creepers = cycle(
             flatten(
                 [
-                    repeat(pygame.image.load(img), 10)
+                    repeat(pygame.image.load(img), 5)
                     for img in Path("assets/stev/idle/").glob("*.png")
                 ]
             )
@@ -361,7 +361,8 @@ class Creeper(Game):
         self.tree_imgs = [
             pygame.image.load(img) for img in Path("assets/oak_trees/").glob("*.png")
         ]
-        self.creeper = pygame.image.load("assets/creeper/idle/1.png")
+        # self.creeper = pygame.image.load("assets/creeper/idle/1.png")
+        self.creeper = next(self.creepers)
         self.bee = Bee()
         x = 0
         self.hotbar = HotBar(game=self)
@@ -514,6 +515,11 @@ class Creeper(Game):
                 if hat[1] == 1:
                     self.y -= 10
 
+            if abs(joystick.get_axis(0)) > 0.2:
+                self.x += joystick.get_axis(0) * 10
+            if abs(joystick.get_axis(1)) > 0.2:
+                self.y += joystick.get_axis(1) * 10
+
     def inventory_keys(self):
         keys = self.keys
         for joystick in self.joysticks.values():
@@ -539,17 +545,26 @@ class Creeper(Game):
     def make_sound(self):
         if not hasattr(self, "last_x"):
             self.last_x = self.x
-        if self.last_x == self.x and self.walking_sound_is_playing:
+        if not hasattr(self, "last_y"):
+            self.last_y = self.y
+        if (
+            self.last_x == self.x and self.last_y == self.y
+        ) and self.walking_sound_is_playing:
             self.walking_sound.stop()
             self.walking_sound_is_playing = False
 
-        if self.last_x != self.x and not self.walking_sound_is_playing:
+        if (
+            self.last_x != self.x or self.last_y != self.y
+        ) and not self.walking_sound_is_playing:
             self.walking_sound.play()
             self.walking_sound_is_playing = True
+        if self.last_x != self.x or self.last_y != self.y:
+
+            self.creeper = next(self.creepers)
         self.last_x = self.x
+        self.last_y = self.y
 
     def game(self):
-        creeper = next(self.creepers)
         self.screen.blit(self.background, (0, 0))
         self.background.fill((0, 255, 247))
         self.process_deaths()
@@ -557,8 +572,11 @@ class Creeper(Game):
             tree.draw()
 
         self.screen.blit(
-            creeper,
-            (self.x - creeper.get_size()[0] / 2, self.y - creeper.get_size()[1] / 2),
+            self.creeper,
+            (
+                self.x - self.creeper.get_size()[0] / 2,
+                self.y - self.creeper.get_size()[1] / 2,
+            ),
         )
         self.bee.draw(self.screen, self.x, self.y)
         for leaf in self.leafs:
