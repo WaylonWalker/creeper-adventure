@@ -86,5 +86,5 @@ jobs:
           git push --tags --force
       - name: publish
         run: |
-          runner hatch build
-          runner hatch publish
+          hatch build
+          hatch publish
