@@ -479,6 +479,20 @@ class Creeper(Game):
             if event.type == pygame.JOYDEVICEREMOVED:
                 del self.joysticks[event.instance_id]
 
+        if not self.joysticks:
+            if (keys[pygame.K_ESCAPE]) and self.main_open_debounce:
+                print("opens")
+                self.main_menu.is_open = not self.main_menu.is_open
+                self.main_open_debounce = 0
+            elif not keys[pygame.K_ESCAPE]:
+                self.main_open_debounce = 1
+
+            if keys[pygame.K_e] and self.inventory_open_debounce:
+                self.inventory_menu.is_open = not self.inventory_menu.is_open
+                self.inventory_open_debounce = 0
+            elif not keys[pygame.K_e]:
+                self.inventory_open_debounce = 1
+
         for joystick in self.joysticks.values():
 
             if joystick.get_button(4) and self.hotbar_back_debounce:
@@ -537,6 +551,13 @@ class Creeper(Game):
 
     def inventory_keys(self):
         keys = self.keys
+        if not self.joysticks:
+            if keys[pygame.K_e] and self.inventory_open_debounce:
+                self.inventory_menu.is_open = not self.inventory_menu.is_open
+                self.inventory_open_debounce = 0
+            elif not keys[pygame.K_e]:
+                self.inventory_open_debounce = 1
+
         for joystick in self.joysticks.values():
             if (
                 keys[pygame.K_e] or joystick.get_button(2)
@@ -548,6 +569,15 @@ class Creeper(Game):
 
     def main_keys(self):
         keys = self.keys
+
+        if not self.joysticks:
+            if (keys[pygame.K_ESCAPE]) and self.main_open_debounce:
+                print("opens")
+                self.main_menu.is_open = not self.main_menu.is_open
+                self.main_open_debounce = 0
+            elif not keys[pygame.K_ESCAPE]:
+                self.main_open_debounce = 1
+
         for joystick in self.joysticks.values():
             if (
                 keys[pygame.K_ESCAPE] or joystick.get_button(9)
