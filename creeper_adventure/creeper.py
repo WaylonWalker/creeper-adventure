@@ -579,6 +579,28 @@ class Creeper(Game):
             if abs(joystick.get_axis(1)) > 0.2:
                 self.y += joystick.get_axis(1) * 10
 
+            if abs(joystick.get_axis(3)) > 0.2 and abs(joystick.get_axis(4)) > 0.2:
+                pygame.mouse.set_pos(
+                    (
+                        pygame.mouse.get_pos()[0] + joystick.get_axis(3) * 32,
+                        pygame.mouse.get_pos()[1] + joystick.get_axis(4) * 32,
+                    )
+                )
+            elif abs(joystick.get_axis(3)) > 0.2:
+                pygame.mouse.set_pos(
+                    (
+                        pygame.mouse.get_pos()[0] + joystick.get_axis(3) * 32,
+                        pygame.mouse.get_pos()[1],
+                    )
+                )
+            elif abs(joystick.get_axis(4)) > 0.2:
+                pygame.mouse.set_pos(
+                    (
+                        pygame.mouse.get_pos()[0],
+                        pygame.mouse.get_pos()[1] + joystick.get_axis(4) * 32,
+                    )
+                )
+
     def inventory_keys(self):
         keys = self.keys
         if not self.joysticks:
