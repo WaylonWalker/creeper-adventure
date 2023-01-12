@@ -271,6 +271,14 @@ class DebugMenu(Menu):
             ),
             (10, 80),
         )
+        self.surf.blit(
+            self.font.render(
+                f"fps: {round(self.game.clock.get_fps())}",
+                True,
+                (255, 255, 255),
+            ),
+            (10, 95),
+        )
 
 
 class LightSource:
