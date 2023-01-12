@@ -613,11 +613,11 @@ class Creeper(Game):
         for joystick in self.joysticks.values():
             if (
                 keys[pygame.K_e] or joystick.get_button(2)
-            ) and self.inventory_open_debounce:
+            ) and self.controller_inventory_open_debounce:
                 self.inventory_menu.is_open = not self.inventory_menu.is_open
-                self.inventory_open_debounce = 0
-            elif not (keys[pygame.K_e] or joystick.get_button(2)):
-                self.inventory_open_debounce = 1
+                self.controller_inventory_open_debounce = 0
+            elif not keys[pygame.K_e] and not joystick.get_button(2):
+                self.controller_inventory_open_debounce = 1
 
     def main_keys(self):
         keys = self.keys
@@ -633,11 +633,11 @@ class Creeper(Game):
         for joystick in self.joysticks.values():
             if (
                 keys[pygame.K_ESCAPE] or joystick.get_button(9)
-            ) and self.main_open_debounce:
+            ) and self.controller_main_open_debounce:
                 self.main_menu.is_open = not self.main_menu.is_open
-                self.main_open_debounce = 0
+                self.controller_main_open_debounce = 0
             elif not (keys[pygame.K_ESCAPE] or joystick.get_button(9)):
-                self.main_open_debounce = 1
+                self.controller_main_open_debounce = 1
 
     def make_sound(self):
         if not hasattr(self, "last_x"):
