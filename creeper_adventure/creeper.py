@@ -522,43 +522,45 @@ class Creeper(Game):
                 self.inventory_open_debounce = 1
 
         for joystick in self.joysticks.values():
+            if joystick.get_axis(5) > 0:
+                if self.attack():
+                    joystick.rumble(0.1, 0.0, 100)
 
-            if joystick.get_button(4) and self.hotbar_back_debounce:
-                print(self.hotbar_back_debounce)
+            if joystick.get_button(4) and self.controller_hotbar_back_debounce:
+                print(self.controller_hotbar_back_debounce)
                 self.hotbar.next(-1)
-                self.hotbar_back_debounce = 0
+                self.controller_hotbar_back_debounce = 0
                 print(self.hotbar_back_debounce)
             if not joystick.get_button(4):
-                print("resetting")
-                self.hotbar_back_debounce = 1
+                self.controller_hotbar_back_debounce = 1
 
-            if joystick.get_button(5) and self.hotbar_forward_debounce:
+            if joystick.get_button(5) and self.controller_hotbar_forward_debounce:
                 self.hotbar.next(1)
-                self.hotbar_forward_debounce = 0
+                self.controller_hotbar_forward_debounce = 0
             elif not joystick.get_button(5):
-                self.hotbar_forward_debounce = 1
+                self.controller_hotbar_forward_debounce = 1
 
             if (
                 keys[pygame.K_e] or joystick.get_button(2)
-            ) and self.inventory_open_debounce:
+            ) and self.controller_inventory_open_debounce:
                 self.inventory_menu.is_open = not self.inventory_menu.is_open
-                self.inventory_open_debounce = 0
-            elif not (keys[pygame.K_e] or joystick.get_button(2)):
-                self.inventory_open_debounce = 1
+                self.controller_inventory_open_debounce = 0
+            elif not keys[pygame.K_e] and not joystick.get_button(2):
+                self.controller_inventory_open_debounce = 1
 
             if (
                 keys[pygame.K_ESCAPE] or joystick.get_button(9)
-            ) and self.main_open_debounce:
+            ) and self.controller_main_open_debounce:
                 self.main_menu.is_open = not self.main_menu.is_open
-                self.main_open_debounce = 0
+                self.controller_main_open_debounce = 0
             elif not (keys[pygame.K_ESCAPE] or joystick.get_button(9)):
-                self.main_open_debounce = 1
+                self.controller_main_open_debounce = 1
 
-            if keys[pygame.K_F3] and self.debug_open_debounce:
+            if keys[pygame.K_F3] and self.controller_debug_open_debounce:
                 self.debug_menu.is_open = not self.debug_menu.is_open
-                self.debug_open_debounce = 0
+                self.controller_debug_open_debounce = 0
             elif not keys[pygame.K_F3]:
-                self.debug_open_debounce = 1
+                self.controller_debug_open_debounce = 1
 
             hats = joystick.get_numhats()
             for i in range(hats):
