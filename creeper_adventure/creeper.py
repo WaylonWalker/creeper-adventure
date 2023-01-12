@@ -705,8 +705,6 @@ class Creeper(Game):
 
         self.mouse_box = MouseSprite(self, self.background, hotbar=self.hotbar)
 
-        self.mouse_box.draw()
-
         self.make_sound()
 
         if self.inventory_menu.is_open:
@@ -715,6 +713,7 @@ class Creeper(Game):
             self.main_keys()
         else:
             self.normal_keys()
+            self.mouse_box.draw()
 
 
 def main(debug=False):
