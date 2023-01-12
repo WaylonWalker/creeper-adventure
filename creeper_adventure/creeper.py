@@ -40,15 +40,16 @@ class MouseSprite:
         if self.hotbar.selected.type is None:
             pygame.draw.rect(self.surf, (255, 0, 0), self.rect)
         else:
-            self.img = pygame.image.load(ASSETS / f"{self.hotbar.selected.type}.png")
+            self.img = self.game.get_img(self.hotbar.selected.type)
             self.surf.blit(
-                pygame.transform.scale(self.img, (16, 16)),
+                pygame.transform.scale(self.img, (64, 64)),
                 self.get_nearest_block_pos(),
             )
 
 
 class TreeSprite:
-    def __init__(self, tree, x, y, scale, flip, surf):
+    def __init__(self, game, tree, x, y, scale, flip, surf):
+        self.game = game
         self.image = tree
         self.health = 100
         self.x = x
@@ -56,7 +57,7 @@ class TreeSprite:
         self.scale = scale
         self.flip = flip
         self.surf = surf
-        self.leafs = [Leaf(self, self.surf, (x + 25, y + 25)) for i in range(2)]
+        self.leafs = [Leaf(self.game, self.surf, (x + 25, y + 25)) for i in range(2)]
         self.shaking = 0
 
     def shake(self):
@@ -66,7 +67,7 @@ class TreeSprite:
         self.leafs.extend(
             [
                 Leaf(
-                    self,
+                    self.game,
                     self.surf,
                     (
                         self.x + 25 + random.randint(-10, 10),
@@ -124,7 +125,11 @@ class HotBar:
         self.game = game
         self.items = [
             HotBarItem(
-                game=self, surf=self.ui, pos=pos, scale=self.scale, margin=self.margin
+                game=self.game,
+                surf=self.ui,
+                pos=pos,
+                scale=self.scale,
+                margin=self.margin,
             )
             for pos in range(num)
         ]
@@ -180,7 +185,7 @@ class HotBarItem:
             self.surf.fill((185, 185, 205, 60))
 
         if self.type:
-            self.img = pygame.image.load(ASSETS / f"{self.type}.png")
+            self.img = self.game.get_img(self.type)
             self.ui.blit(
                 pygame.transform.scale(
                     self.img,
@@ -189,7 +194,7 @@ class HotBarItem:
                 (self.pos * self.scale + self.margin, self.margin),
             )
             font = pygame.font.SysFont(None, self.scale)
-            qty = str(self.game.game.inventory[self.type])
+            qty = str(self.game.inventory[self.type])
             img = font.render(qty, True, (255, 255, 255))
             self.ui.blit(
                 pygame.transform.scale(img, (self.scale * 0.6, self.scale * 0.6)),
@@ -288,7 +293,7 @@ class LightSource:
         self.img = img
         self.center = center
         self.sx, self.sy = center
-        self.spot = pygame.image.load(ASSETS / "spotlight.png")
+        self.spot = self.game.get_img("spotlight")
 
 
 class Leaf:
@@ -298,7 +303,7 @@ class Leaf:
         self.center = center
         self.sx, self.sy = center
         self.img = pygame.transform.scale(
-            pygame.image.load(ASSETS / "leaf.png"), (4, 4)
+            self.game.get_img("leaf"), (4, 4)
         ).convert_alpha()
         self.lifespan = lifespan
         self.r = random.randint(0, 360)
@@ -424,6 +429,13 @@ class Creeper(Game):
         self.debug_menu = DebugMenu(self)
         self.debug_menu.is_open = debug
         self.main_menu = Menu(self, title="main menu")
+
+    def get_img(self, img):
+        try:
+            return self._imgs[img]
+        except KeyError:
+            self._imgs[img] = pygame.image.load(ASSETS / f"{img}.png")
+            return self._imgs[img]
 
     def attack(self):
 
