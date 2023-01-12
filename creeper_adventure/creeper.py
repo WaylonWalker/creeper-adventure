@@ -420,11 +420,19 @@ class Creeper(Game):
 
         self.mouse_box = MouseSprite(self, self.background, hotbar=self.hotbar)
         self.joysticks = {}
+
         self.hotbar_back_debounce = 1
         self.hotbar_forward_debounce = 1
         self.inventory_open_debounce = 1
         self.debug_open_debounce = 1
         self.main_open_debounce = 1
+
+        self.controller_hotbar_back_debounce = 1
+        self.controller_hotbar_forward_debounce = 1
+        self.controller_inventory_open_debounce = 1
+        self.controller_debug_open_debounce = 1
+        self.controller_main_open_debounce = 1
+
         self.inventory_menu = Menu(self, title="inventory")
         self.debug_menu = DebugMenu(self)
         self.debug_menu.is_open = debug
