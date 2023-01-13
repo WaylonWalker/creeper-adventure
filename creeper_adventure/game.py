@@ -10,11 +10,14 @@ class Game:
         self.screen_size = (854, 480)
         self.screen_size = (1280, 800)
         self.screen_size = (1920, 1080)
-        self.screen = pygame.display.set_mode(self.screen_size)
+        # pygame.display.set_mode(resolution, flags, bpp)
+        flags = pygame.DOUBLEBUF
+        self.screen = pygame.display.set_mode(self.screen_size, flags)
         self.clock = pygame.time.Clock()
 
         self.running = True
         self.surfs = []
+        self.elapsed = 0
 
     def should_quit(self):
         for event in self.events:
@@ -25,7 +28,8 @@ class Game:
         ...
 
     def reset_screen(self):
-        self.screen.fill((0, 0, 0))
+        ...
+        # self.screen.fill((0, 0, 0))
 
     def run(self):
         while self.running:
@@ -37,7 +41,7 @@ class Game:
             for surf in self.surfs:
                 pygame.blit(surf)
             pygame.display.update()
-            self.clock.tick(30)
+            self.elapsed = self.clock.tick(60) / 100
         pygame.quit()
 
 

@@ -40,7 +40,7 @@ class MouseSprite:
         if self.hotbar.selected.type is None:
             pygame.draw.rect(self.surf, (255, 0, 0), self.rect)
         else:
-            self.img = self.game.get_img(self.hotbar.selected.type)
+            self.img = self.game.get_img(self.hotbar.selected.type).convert()
             self.surf.blit(
                 pygame.transform.scale(self.img, (64, 64)),
                 self.get_nearest_block_pos(),
@@ -284,6 +284,22 @@ class DebugMenu(Menu):
             ),
             (10, 95),
         )
+        self.surf.blit(
+            self.font.render(
+                f"fullscreen: {pygame.FULLSCREEN}",
+                True,
+                (255, 255, 255),
+            ),
+            (10, 110),
+        )
+        self.surf.blit(
+            self.font.render(
+                f"elapsed: {self.game.elapsed}",
+                True,
+                (255, 255, 255),
+            ),
+            (10, 125),
+        )
 
 
 class LightSource:
@@ -304,10 +320,11 @@ class Leaf:
         self.sx, self.sy = center
         self.img = pygame.transform.scale(
             self.game.get_img("leaf"), (4, 4)
-        ).convert_alpha()
+        )  # .convert_alpha()
         self.lifespan = lifespan
         self.r = random.randint(0, 360)
         self.x, self.y = [int(i) + random.randint(-8, 8) for i in self.center]
+        self.speed = 3
         self.restart()
 
     def restart(self):
@@ -323,13 +340,13 @@ class Leaf:
         )
 
         if self.y < self.sy + 40:
-            self.y += random.randint(0, 5) / 4
-            self.x += random.randint(-15, 5) / 10
-            self.r += random.randint(-10, 10)
+            self.y += random.randint(0, 5) / 4 * self.speed * self.game.elapsed
+            self.x += random.randint(-15, 5) / 10 * self.speed * self.game.elapsed
+            self.r += random.randint(-10, 10) * self.speed / 3 * self.game.elapsed
         elif self.y < self.sy + 45:
-            self.y += random.randint(-2, 5) / 10
-            self.x += random.randint(-18, 2) / 10
-            self.r += random.randint(-10, 25)
+            self.y += random.randint(-2, 5) / 10 * self.speed * self.game.elapsed
+            self.x += random.randint(-18, 2) / 10 * self.speed * self.game.elapsed
+            self.r += random.randint(-10, 25) * self.speed * self.game.elapsed
         else:
             self.restart()
         if self.x > self.sx + 100:
@@ -357,16 +374,20 @@ class Bee:
 class Creeper(Game):
     def __init__(self, debug=False):
         super().__init__()
-        self.inventory = {}
+        pygame.mouse.set_visible(False)
+        self.inventory = {"plank-bottom": 1, "plank-top": 1}
+        self._imgs = {}
+        self.blocks = {}
         self.camera = (0, 0)
         self.day_len = 1000 * 60
         self.background = pygame.Surface(self.screen.get_size())
         self.foreground = pygame.Surface(self.screen.get_size())
         self.build = pygame.Surface(self.screen.get_size())
-        self.darkness = pygame.Surface(self.screen.get_size()).convert_alpha()
+        # self.darkness = pygame.Surface(self.screen.get_size())
         self.axe_sound = pygame.mixer.Sound(ASSETS / "sounds/axe.mp3")
         self.walking_sound = pygame.mixer.Sound(ASSETS / "sounds/walking.mp3")
         self.walking_sound_is_playing = False
+        self.speed = 5
 
         self.background.fill((0, 255, 247))
         self.x, self.y = [i / 2 for i in self.screen.get_size()]
@@ -395,20 +416,21 @@ class Creeper(Game):
         self.trees = []
 
         x_range = [
-            self.screen.get_size()[0] * 0.1,
-            self.screen.get_size()[0] * 0.9,
+            0,
+            self.screen.get_size()[0],
         ]
         y_range = [
             self.screen.get_size()[1] * 0.35,
             self.screen.get_size()[1] * 0.5,
         ]
-        for i in range(10):
+        for i in range(30):
             x = random.randint(*x_range)
             y = random.randint(*y_range)
 
             scale = random.randint(42, 86)
             self.trees.append(
                 TreeSprite(
+                    game=self,
                     tree=random.choice(self.tree_imgs),
                     x=x,
                     y=y,
@@ -432,6 +454,8 @@ class Creeper(Game):
         self.controller_inventory_open_debounce = 1
         self.controller_debug_open_debounce = 1
         self.controller_main_open_debounce = 1
+
+        self.debounce_walk_img = 0
 
         self.inventory_menu = Menu(self, title="inventory")
         self.debug_menu = DebugMenu(self)
@@ -461,8 +485,12 @@ class Creeper(Game):
         return True
 
     def place_block(self):
-        if self.hotbar.selected.type is None:
-            return False
+        # if self.hotbar.selected.type is None:
+        #     return False
+        self.blocks[str(self.mouse_box.get_nearest_block_pos())] = Block(
+            self.hotbar.selected.type, self.mouse_box.get_nearest_block_pos()
+        )
+        print(self.blocks)
 
     def process_deaths(self):
         for i, tree in enumerate(copy(self.trees)):
@@ -478,13 +506,13 @@ class Creeper(Game):
     def normal_keys(self):
         keys = self.keys
         if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-            self.x -= 10
+            self.x -= 10 * self.speed * self.elapsed
         if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-            self.x += 10
+            self.x += 10 * self.speed * self.elapsed
         if keys[pygame.K_w] or keys[pygame.K_UP]:
-            self.y -= 10
+            self.y -= 10 * self.speed * self.elapsed
         if keys[pygame.K_s] or keys[pygame.K_DOWN]:
-            self.y += 10
+            self.y += 10 * self.speed * self.elapsed
         if keys[pygame.K_k]:
             self.hotbar.next(1)
         if keys[pygame.K_j]:
@@ -566,18 +594,18 @@ class Creeper(Game):
             for i in range(hats):
                 hat = joystick.get_hat(i)
                 if hat[0] == 1:
-                    self.x += 10
+                    self.x += 10 * self.speed * self.elapsed
                 if hat[0] == -1:
-                    self.x -= 10
+                    self.x -= 10 * self.speed * self.elapsed
                 if hat[1] == -1:
-                    self.y += 10
+                    self.y += 10 * self.speed * self.elapsed
                 if hat[1] == 1:
-                    self.y -= 10
+                    self.y -= 10 * self.speed * self.elapsed
 
             if abs(joystick.get_axis(0)) > 0.2:
-                self.x += joystick.get_axis(0) * 10
+                self.x += joystick.get_axis(0) * 10 * self.speed * self.elapsed
             if abs(joystick.get_axis(1)) > 0.2:
-                self.y += joystick.get_axis(1) * 10
+                self.y += joystick.get_axis(1) * 10 * self.speed * self.elapsed
 
             if abs(joystick.get_axis(3)) > 0.2 and abs(joystick.get_axis(4)) > 0.2:
                 pygame.mouse.set_pos(
@@ -655,15 +683,22 @@ class Creeper(Game):
         ) and not self.walking_sound_is_playing:
             self.walking_sound.play()
             self.walking_sound_is_playing = True
-        if self.last_x != self.x or self.last_y != self.y:
-
+        if (
+            self.last_x != self.x or self.last_y != self.y
+        ) and self.debounce_walk_img < 0:
             self.creeper = next(self.creepers)
+            self.debounce_walk_img = 0.15
         self.last_x = self.x
         self.last_y = self.y
 
     def game(self):
         # self.camera = (self.camera[0] + 1, self.camera[1])
+
+        self.debounce_walk_img -= self.elapsed
         self.screen.blit(self.background, self.camera)
+        for block in self.blocks.values():
+            self.screen.blit(block.img, block.pos)
+
         self.background.fill((0, 255, 247))
         self.process_deaths()
         for tree in self.trees:
@@ -683,20 +718,20 @@ class Creeper(Game):
         light_level = pygame.time.get_ticks() % self.day_len
         light_level = abs(light_level * (255 * 2 / self.day_len) - 255)
 
-        self.darkness.fill((light_level, light_level, light_level))
-        if self.light_power < 500:
-            self.light_power = min(self.light_power**1.1, 500)
-        self.darkness.blit(
-            pygame.transform.smoothscale(
-                self.spot, [self.light_power, self.light_power]
-            ),
-            (self.x - self.light_power / 2, self.y - self.light_power / 2),
-        )
-        self.screen.blit(
-            self.darkness,
-            (0, 0),
-            special_flags=pygame.BLEND_RGBA_MULT,
-        )
+        # self.darkness.fill((light_level, light_level, light_level))
+        # if self.light_power < 500:
+        #     self.light_power = min(self.light_power**1.1, 500)
+        # self.darkness.blit(
+        #     pygame.transform.smoothscale(
+        #         self.spot, [self.light_power, self.light_power]
+        #     ),
+        #     (self.x - self.light_power / 2, self.y - self.light_power / 2),
+        # )
+        # self.screen.blit(
+        #     pygame.transform.scale(self.darkness, self.screen.get_size()).convert(),
+        #     (0, 0),
+        #     special_flags=pygame.BLEND_MULT,
+        # )
 
         self.hotbar.draw()
         self.debug_menu.draw()
