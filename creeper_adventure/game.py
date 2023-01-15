@@ -4,6 +4,7 @@ import pygame
 class Game:
     def __init__(self):
         pygame.init()
+        # pygame.mouse.set_visible(False)
         pygame.mixer.init()
         pygame.display.set_caption(__file__)
 
@@ -18,6 +19,7 @@ class Game:
         self.running = True
         self.surfs = []
         self.elapsed = 0
+        self.frames = 0
 
     def should_quit(self):
         for event in self.events:
@@ -42,6 +44,7 @@ class Game:
                 pygame.blit(surf)
             pygame.display.update()
             self.elapsed = self.clock.tick(60) / 100
+            self.frames += 1
         pygame.quit()
 
 

@@ -11,6 +11,40 @@ from creeper_adventure.game import Game
 ASSETS = Path(__file__).parent / "assets"
 
 
+class Button:
+    def __init__(self, game, surf, text, x, y, w, h, on_click=lambda: ...):
+        self.game = game
+        self.surf = surf
+        self.text = text
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.on_click = on_click
+        self.font = pygame.font.SysFont(None, 32)
+
+    def draw(self):
+        pygame.draw.rect(self.surf, (255, 255, 255), (self.x, self.y, self.w, self.h))
+        label = self.font.render(self.text, True, (0, 0, 0))
+        label_rect = label.get_rect()
+        label_rect.center = (self.x + self.w / 2, self.y + self.h / 2)
+        self.surf.blit(label, label_rect)
+        for event in self.game.events:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if self.is_clicked(event.pos):
+                    self.on_click()
+                # elif quit_button.is_clicked(event.pos):
+                #     running = False
+        # if self.is_clicked:
+        #     self.on_click()
+
+    def is_clicked(self, pos):
+        if pos[0] > self.x and pos[0] < self.x + self.w:
+            if pos[1] > self.y and pos[1] < self.y + self.h:
+                return True
+        return False
+
+
 class MouseSprite:
     def __init__(self, game, surf, hotbar):
         self.game = game
@@ -178,6 +212,7 @@ class HotBarItem:
         self.selected = False
         self.surf.fill((0, 0, 0))
         self.type = None
+        self.font = pygame.font.SysFont(None, self.scale)
 
     def draw(self):
         self.surf.fill((0, 0, 0, 60))
@@ -193,9 +228,8 @@ class HotBarItem:
                 ),
                 (self.pos * self.scale + self.margin, self.margin),
             )
-            font = pygame.font.SysFont(None, self.scale)
             qty = str(self.game.inventory[self.type])
-            img = font.render(qty, True, (255, 255, 255))
+            img = self.font.render(qty, True, (255, 255, 255))
             self.ui.blit(
                 pygame.transform.scale(img, (self.scale * 0.6, self.scale * 0.6)),
                 (self.pos * self.scale + self.margin, self.margin),
@@ -222,10 +256,12 @@ class Menu:
         self.scale = scale
         self.margin = margin
         self.alpha = alpha
+        self.font = pygame.font.SysFont(None, 20)
+        self.surf = pygame.Surface(self.game.screen.get_size()).convert_alpha()
 
     def draw(self):
         if self.is_open:
-            self.surf = pygame.Surface(self.game.screen.get_size()).convert_alpha()
+            # self.surf = pygame.Surface(self.game.screen.get_size()).convert_alpha()
             self.surf.fill((0, 0, 0, self.alpha))
             font = pygame.font.SysFont(None, self.scale)
             img = font.render(self.title, True, (255, 255, 255))
@@ -245,7 +281,6 @@ class Menu:
 class DebugMenu(Menu):
     def __init__(self, game):
         super().__init__(title="Debug Menu", game=game, alpha=0)
-        self.font = pygame.font.SysFont(None, 20)
 
     def _draw(self):
         self.surf.blit(
@@ -300,6 +335,31 @@ class DebugMenu(Menu):
             ),
             (10, 125),
         )
+
+
+class MainMenu(Menu):
+    def __init__(self, game, title):
+        super().__init__(game=game, title=title)
+        self.set_button_text()
+
+    @property
+    def start_button(self):
+        w = 200
+        h = 50
+        x = self.game.screen.get_size()[0] / 2 - w / 2
+        y = 300
+        print(self.game.frames)
+        return Button(self.game, self.surf, self.button_text, x, y, w, h, self.toggle)
+
+    def set_button_text(self):
+        self.button_text = "Start Game" if self.game.frames < 100 else "Continue"
+
+    def toggle(self):
+        self.set_button_text()
+        self.is_open = not self.is_open
+
+    def _draw(self):
+        self.start_button.draw()
 
 
 class LightSource:
@@ -374,7 +434,6 @@ class Bee:
 class Creeper(Game):
     def __init__(self, debug=False):
         super().__init__()
-        pygame.mouse.set_visible(False)
         self.inventory = {"plank-bottom": 1, "plank-top": 1}
         self._imgs = {}
         self.blocks = {}
@@ -460,7 +519,8 @@ class Creeper(Game):
         self.inventory_menu = Menu(self, title="inventory")
         self.debug_menu = DebugMenu(self)
         self.debug_menu.is_open = debug
-        self.main_menu = Menu(self, title="main menu")
+        self.main_menu = MainMenu(self, title="main menu")
+        self.main_menu.is_open = True
 
     def get_img(self, img):
         try:
@@ -537,7 +597,6 @@ class Creeper(Game):
 
         if not self.joysticks:
             if (keys[pygame.K_ESCAPE]) and self.main_open_debounce:
-                print("opens")
                 self.main_menu.is_open = not self.main_menu.is_open
                 self.main_open_debounce = 0
             elif not keys[pygame.K_ESCAPE]:
