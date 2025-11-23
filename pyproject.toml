@@ -26,6 +26,7 @@ classifiers = [
 dependencies = [
   "click",
   "pygame",
+  "noise",
   "more_itertools",
 ]
 dynamic = ["version"]

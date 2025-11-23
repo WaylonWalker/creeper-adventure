@@ -1,10 +1,12 @@
-import random
 from copy import copy
 from itertools import cycle, repeat
 from pathlib import Path
+import random
+from typing import List, Optional
 
-import pygame
 from more_itertools import flatten
+from pydantic import BaseModel
+import pygame
 
 from creeper_adventure.game import Game
 
@@ -348,7 +350,6 @@ class MainMenu(Menu):
         h = 50
         x = self.game.screen.get_size()[0] / 2 - w / 2
         y = 300
-        print(self.game.frames)
         return Button(self.game, self.surf, self.button_text, x, y, w, h, self.toggle)
 
     def set_button_text(self):
